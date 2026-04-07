@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P11 — Diagnóstico Supabase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{background:#050A18;color:#E8EEFF;font-family:monospace;padding:30px;font-size:14px}
+  h2{color:#00C8FF;margin-bottom:20px}
+  .box{background:#0C1525;border:1px solid #0057FF33;border-radius:10px;padding:20px;margin-bottom:16px}
+  .ok{color:#25D366}.err{color:#F44336}.warn{color:#FF9800}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  td,th{border:1px solid #0057FF33;padding:8px;text-align:left;font-size:12px}
+  th{color:#00C8FF;background:#0057FF15}
+</style>
+</head>
+<body>
+<h2>🔍 P11 Tienda — Diagnóstico Supabase</h2>
+
+<div class="box" id="r1">⏳ Conectando a Supabase...</div>
+<div class="box" id="r2" style="display:none"></div>
+<div class="box" id="r3" style="display:none"></div>
+<div class="box" id="r4" style="display:none"></div>
+
+<script>
+const SB_URL = 'https://dlysfoqsvddltphojyed.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRseXNmb3FzdmRkbHRwaG9qeWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTA0NjgsImV4cCI6MjA4Nzk2NjQ2OH0.9OsHDYvXp2BgOZ790yKE-D8e9nvBzkrig7MCFsyT9Pw';
+const { createClient } = supabase;
+const db = createClient(SB_URL, SB_KEY);
+
+async function run(){
+  // TEST 1: conexión básica
+  try {
+    const { data, error } = await db.from('productos').select('count', {count:'exact',head:true});
+    if(error) throw error;
+    document.getElementById('r1').innerHTML = `<span class="ok">✅ Conexión OK</span> — Supabase responde correctamente`;
+  } catch(e) {
+    document.getElementById('r1').innerHTML = `<span class="err">❌ Error de conexión:</span> ${e.message || JSON.stringify(e)}`;
+    return;
+  }
+
+  // TEST 2: count de productos
+  const r2 = document.getElementById('r2');
+  r2.style.display='block';
+  try {
+    const { count, error } = await db.from('productos').select('*', {count:'exact',head:true});
+    if(error) throw error;
+    r2.innerHTML = `<span class="ok">✅ Total productos en tabla:</span> <strong>${count}</strong>`;
+  } catch(e) {
+    r2.innerHTML = `<span class="err">❌ Error contando productos:</span> ${e.message}`;
+  }
+
+  // TEST 3: primeros 5 productos sin filtros
+  const r3 = document.getElementById('r3');
+  r3.style.display='block';
+  try {
+    const { data, error } = await db.from('productos').select('id,nombre,precio_venta,stock,activo,categoria_id').limit(5);
+    if(error) throw error;
+    if(!data || data.length === 0){
+      r3.innerHTML = `<span class="warn">⚠️ La query devuelve 0 registros (posible RLS bloqueando)</span>`;
+    } else {
+      let rows = data.map(p => `<tr><td>${p.id}</td><td>${p.nombre}</td><td>${p.precio_venta}</td><td>${p.stock}</td><td>${p.activo}</td><td>${p.categoria_id}</td></tr>`).join('');
+      r3.innerHTML = `<span class="ok">✅ Primeros ${data.length} productos:</span>
+        <table><tr><th>ID</th><th>Nombre</th><th>Precio venta</th><th>Stock</th><th>Activo</th><th>Cat ID</th></tr>${rows}</table>`;
+    }
+  } catch(e) {
+    r3.innerHTML = `<span class="err">❌ Error leyendo productos:</span> ${e.message}`;
+  }
+
+  // TEST 4: categorías
+  const r4 = document.getElementById('r4');
+  r4.style.display='block';
+  try {
+    const { data, error } = await db.from('categorias').select('id,nombre').limit(5);
+    if(error) throw error;
+    let rows = (data||[]).map(c=>`<tr><td>${c.id}</td><td>${c.nombre}</td></tr>`).join('');
+    r4.innerHTML = `<span class="ok">✅ Categorías (${data.length}):</span>
+      <table><tr><th>ID</th><th>Nombre</th></tr>${rows}</table>`;
+  } catch(e) {
+    r4.innerHTML = `<span class="err">❌ Error leyendo categorías:</span> ${e.message}`;
+  }
+}
+run();
+</script>
+</body>
+</html>
