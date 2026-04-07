@@ -916,13 +916,15 @@ async function loadProducts(){
 
     if(error) throw error;
 
-    // Enriquecer con nombre de categoría, filtrar activos con stock
+    // Mostrar todos los productos activos (con y sin stock)
     allProducts = (data || [])
-      .filter(p => p['activo'] !== false && (p['stock'] ?? 0) > 0)
+      .filter(p => p['activo'] !== false)
       .map(p => ({
         ...p,
         categoria_nombre: catMap[p['categoria_id']] || 'General',
       }));
+
+    console.log(`📦 Productos cargados: ${allProducts.length}`);
 
     console.log(`✅ ${allProducts.length} productos cargados desde "${TABLE}"`);
     buildCategoryFilters();
@@ -978,7 +980,7 @@ function productCard(p, badge){
   const id    = p[F.id];
 
   const stockClass = stock > 5 ? 'stock-ok' : stock > 0 ? 'stock-low' : 'stock-out';
-  const stockText  = stock > 5 ? 'En stock' : stock > 0 ? `Últimas ${stock} unidades` : 'Sin stock';
+  const stockText  = stock > 5 ? `Stock: ${stock}` : stock > 0 ? `Últimas ${stock} unidades` : 'Sin stock — Consultá';
   const imgHtml    = img
     ? `<img class="product-img" src="${img}" alt="${name}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=product-img-placeholder>${getCategoryEmoji(cat)}</div>'">`
     : `<div class="product-img-placeholder">${getCategoryEmoji(cat)}</div>`;
