@@ -293,6 +293,31 @@ const WA = '543512294812';
 const ENVIO = 2500;
 
 const db = createClient(SB_URL, SB_KEY);
+
+// ── Categorías madre para la tienda (agrupan las de P11 Gestión) ──
+const CAT_MAP = {
+  '📱 Fundas y Templados':    ['*TEMPLADOS/FUNDAS*','ACCESORIOS CELULARES','FUNDA TABLET C/TECLADO','FUNDA TABLET/NOTEBOOK'],
+  '🎧 Auriculares':           ['AURICULAR INALAMBRICOS','AURICULAR ML','AURICULAR ML BT','AURICULAR ML MARCA','AURICULAR VINCHA','AURICULAR VINCHA BT','AURICULAR VINCHA GAMER'],
+  '🔌 Cables y Cargadores':   ['CABLES','CABLES HDMI','CARGADOR NOTEBOOK','CARGADORES AUTOS','CARGADORES CELULARES','CARGADORES PILAS','CARGADORES PORTATILES'],
+  '🔊 Audio':                 ['PARLANTES','PARLANTES JBL','PARLANTES PC','MICROFONOS','RADIOS'],
+  '🎮 Gaming':                ['CONSOLAS','JOYSTICK','MOUSE GAMER','MOUSEPAD','TECLADOS GAMERS','TECLADOS GAMERS MARCA'],
+  '💻 Informática':           ['INSUMOS INFORMATICOS','MOUSE','TECLADOS','MEMORIAS / PENDRIVE','CAMARA WEB','CONECTIVIDAD'],
+  '⌚ Smartwatch y Relojes':  ['SMARTWATCH / SMARTBAND','RELOJ DESPERTADOR'],
+  '📡 Seguridad y Video':     ['CAMARA SEGURIDAD','CAMARAS SEGURIDAD','PROYECTORES','CONVERTIDOR SMART'],
+  '💡 Iluminación':           ['ILUMINACION LED','LUZ LED','LINTERNAS'],
+  '🔋 Pilas y Baterías':      ['PILAS','CARGADORES PILAS'],
+  '📺 Soportes':              ['SOPORTE','SOPORTE AUTO','SOPORTE TV/SMART/MONITOR'],
+  '🌀 Varios':                ['BALANZAS','ADAPTADORES / RECEPTORES','VENTILADORES','TERMOS/VASOS','VARIOS 3 PAGOS','General','RADIOS'],
+  '🔧 Servicio Técnico':      ['*Servicio Tecnico*'],
+};
+
+// Función que devuelve la categoría madre dado el nombre original
+function catMadre(nombre) {
+  for (const [madre, hijos] of Object.entries(CAT_MAP)) {
+    if (hijos.some(h => h.toUpperCase() === (nombre||'').toUpperCase())) return madre;
+  }
+  return '🌀 Varios';
+}
 const $ = id => document.getElementById(id);
 const fmt = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
 
@@ -328,7 +353,10 @@ async function load(){
     ]);
     if(error) throw error;
     const catMap = Object.fromEntries((cats||[]).map(c=>[c.id, c.nombre]));
-    products = (prods||[]).map(p=>({...p, categoria_nombre: catMap[p.categoria_id]||'General'}));
+    products = (prods||[]).map(p=>{
+      const catOriginal = catMap[p.categoria_id] || 'General';
+      return {...p, categoria_nombre: catMadre(catOriginal), categoria_original: catOriginal};
+    });
     buildFilters();
     renderOffers();
     renderProducts();
