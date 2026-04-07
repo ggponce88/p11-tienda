@@ -828,16 +828,16 @@ footer{
 const SB_URL  = 'https://dlysfoqsvddltphojyed.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRseXNmb3FzdmRkbHRwaG9qeWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTA0NjgsImV4cCI6MjA4Nzk2NjQ2OH0.9OsHDYvXp2BgOZ790yKE-D8e9nvBzkrig7MCFsyT9Pw';
 
-// ── Ajustá estos nombres si tus columnas tienen nombres distintos ──
+// ── Columnas reales de la tabla "productos" de P11 Gestión ──
+const TABLE = 'productos';
 const F = {
-  id:          'id',
-  name:        'nombre',
-  price:       'precio',
-  stock:       'stock',
-  category:    'categoria',
-  image:       'imagen_url',
-  description: 'descripcion',
-  featured:    'destacado',   // columna boolean (true = aparece en Ofertas)
+  id:       'id',
+  name:     'nombre',
+  price:    'precio_venta',
+  stock:    'stock',
+  category: 'categoria_nombre',
+  image:    'foto_url',
+  featured: null,
 };
 
 // Datos de transferencia (completar con tu CBU/alias)
@@ -901,46 +901,48 @@ function getCategoryEmoji(cat){
 // ═══════════════════════════════════════════════════════
 // LOAD PRODUCTS
 // ═══════════════════════════════════════════════════════
-async function tryTable(tableName){
-  const { data, error } = await db.from(tableName).select('*').order(F.name);
-  if(error) throw error;
-  return data || [];
-}
-
 async function loadProducts(){
-  const tables = ['products', 'productos', 'product'];
-  let lastError = null;
+  try {
+    // Cargar categorías para mapear IDs a nombres
+    const { data: cats } = await db.from('categorias').select('id, nombre');
+    const catMap = {};
+    (cats || []).forEach(c => { catMap[c.id] = c.nombre; });
 
-  for(const tbl of tables){
-    try {
-      const data = await tryTable(tbl);
-      // Filtrar sin stock en cliente (por si RLS no permite filtrar)
-      allProducts = data.filter(p => (p[F.stock] ?? 1) > 0);
-      console.log(`✅ Tabla "${tbl}" cargada: ${allProducts.length} productos`);
-      buildCategoryFilters();
-      renderOffers();
-      renderProducts();
-      return;
-    } catch(e) {
-      const msg = e?.message || e?.details || JSON.stringify(e);
-      console.warn(`Tabla "${tbl}" falló:`, msg);
-      lastError = msg;
-    }
+    // Cargar productos con stock > 0
+    const { data, error } = await db
+      .from(TABLE)
+      .select('*')
+      .order('nombre');
+
+    if(error) throw error;
+
+    // Enriquecer con nombre de categoría, filtrar activos con stock
+    allProducts = (data || [])
+      .filter(p => p['activo'] !== false && (p['stock'] ?? 0) > 0)
+      .map(p => ({
+        ...p,
+        categoria_nombre: catMap[p['categoria_id']] || 'General',
+      }));
+
+    console.log(`✅ ${allProducts.length} productos cargados desde "${TABLE}"`);
+    buildCategoryFilters();
+    renderOffers();
+    renderProducts();
+
+  } catch(e) {
+    const errMsg = e?.message || e?.details || JSON.stringify(e);
+    console.error('Error Supabase:', errMsg);
+    const errHtml = `<div class="empty-state">
+      <div class="icon">⚠️</div>
+      <p>No se pudieron cargar los productos.</p>
+      <small style="color:#F44336;margin-top:8px;display:block">${errMsg}</small>
+      <small style="color:var(--gray);margin-top:4px;display:block">
+        Verificá la política RLS de la tabla "productos" en Supabase.
+      </small>
+    </div>`;
+    $('productsGrid').innerHTML = errHtml;
+    $('offersGrid').innerHTML = '';
   }
-
-  // Si llegamos acá, ninguna tabla funcionó
-  const errMsg = lastError || 'Error desconocido';
-  console.error('Error final Supabase:', errMsg);
-  const errHtml = `<div class="empty-state">
-    <div class="icon">⚠️</div>
-    <p>No se pudieron cargar los productos.</p>
-    <small style="color:#F44336;margin-top:8px;display:block">${errMsg}</small>
-    <small style="color:var(--gray);margin-top:4px;display:block">
-      Revisá: 1) Nombre de tabla en Supabase &nbsp;|&nbsp; 2) Política RLS para anon
-    </small>
-  </div>`;
-  $('productsGrid').innerHTML = errHtml;
-  $('offersGrid').innerHTML = '';
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1000,8 +1002,8 @@ function productCard(p, badge){
 }
 
 function renderOffers(){
-  const featured = allProducts.filter(p => p[F.featured]).slice(0,8);
-  const toShow   = featured.length ? featured : allProducts.slice(0,4);
+  // Mostrar los productos con mayor stock como "destacados"
+  const toShow = [...allProducts].sort((a,b) => (b['stock']||0)-(a['stock']||0)).slice(0,4);
   $('offersGrid').innerHTML = toShow.map(p => productCard(p, true)).join('');
 }
 
