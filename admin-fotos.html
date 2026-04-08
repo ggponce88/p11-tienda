@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P11 Admin — Gestión de Fotos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#0057FF;--cyan:#00C8FF;--dark:#050A18;--dark2:#0C1525;--dark3:#111B30;--gray:#8A9BB5;--grad:linear-gradient(135deg,#0057FF,#00C8FF);--border:rgba(0,87,255,0.18)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--dark);color:#E8EEFF;font-family:'DM Sans',sans-serif;min-height:100vh}
+a{text-decoration:none;color:inherit}button{cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--blue);border-radius:3px}
+
+header{background:rgba(5,10,24,0.95);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.back-btn{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray);padding:6px 14px;border:1px solid var(--border);border-radius:8px;transition:color .2s,border .2s}
+.back-btn:hover{color:var(--cyan);border-color:var(--cyan)}
+
+.container{max-width:1100px;margin:0 auto;padding:32px 24px}
+
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;margin-bottom:8px}
+.page-title span{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-sub{font-size:14px;color:var(--gray);margin-bottom:32px}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.stat-box{background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex:1;min-width:140px}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:32px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gray)}
+
+/* Controls */
+.controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;align-items:center}
+.search-box{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:#E8EEFF;font-size:13px;width:240px;outline:none;transition:border .2s}
+.search-box:focus{border-color:var(--blue)}.search-box::placeholder{color:var(--gray)}
+.filter-sel{background:var(--dark2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:#E8EEFF;font-size:13px;outline:none;cursor:pointer}
+.filter-sel option{background:var(--dark2)}
+.btn-auto-all{background:var(--grad);border-radius:8px;padding:9px 20px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;transition:opacity .2s}
+.btn-auto-all:hover{opacity:.85}
+.btn-auto-all:disabled{opacity:.4;cursor:not-allowed}
+.progress-bar{flex:1;min-width:200px;background:var(--dark3);border-radius:20px;height:8px;overflow:hidden;display:none}
+.progress-fill{height:100%;background:var(--grad);border-radius:20px;width:0%;transition:width .3s}
+.progress-text{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;color:var(--gray)}
+
+/* Table */
+.table-wrap{background:var(--dark2);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-header span{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--cyan)}
+table{width:100%;border-collapse:collapse}
+th{padding:12px 16px;text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gray);border-bottom:1px solid var(--border);background:rgba(0,87,255,0.05)}
+td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(0,87,255,0.04)}
+
+.thumb{width:48px;height:48px;border-radius:8px;object-fit:contain;background:var(--dark3);padding:4px}
+.no-img{width:48px;height:48px;border-radius:8px;background:var(--dark3);display:flex;align-items:center;justify-content:center;font-size:22px}
+.product-name-cell{font-weight:500;color:#E8EEFF;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-badge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);background:rgba(0,200,255,0.08);padding:3px 10px;border-radius:20px;white-space:nowrap}
+.foto-count{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700}
+.has-foto{color:#25D366}.no-foto{color:var(--gray)}
+
+/* Action buttons */
+.btn-auto{background:rgba(0,87,255,0.12);border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:#E8EEFF;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;transition:background .2s,border .2s;white-space:nowrap}
+.btn-auto:hover{background:rgba(0,87,255,0.3);border-color:var(--blue)}
+.btn-auto:disabled{opacity:.3;cursor:not-allowed}
+.btn-upload{background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);border-radius:8px;padding:6px 14px;color:#25D366;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;transition:background .2s}
+.btn-upload:hover{background:rgba(37,211,102,0.2)}
+.btn-delete{background:rgba(244,67,54,0.1);border:1px solid rgba(244,67,54,0.2);border-radius:8px;padding:6px 10px;color:#F44336;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;transition:background .2s}
+.btn-delete:hover{background:rgba(244,67,54,0.2)}
+
+/* Status chips */
+.status{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:4px 12px;border-radius:20px}
+.status.ok{background:rgba(37,211,102,0.1);color:#25D366}
+.status.searching{background:rgba(0,200,255,0.1);color:var(--cyan)}
+.status.error{background:rgba(244,67,54,0.1);color:#F44336}
+.status.idle{background:var(--dark3);color:var(--gray)}
+
+/* Upload modal */
+.upload-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.upload-overlay.active{opacity:1;pointer-events:all}
+.upload-modal{background:var(--dark2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:500px;padding:28px}
+.upload-modal h3{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:6px}
+.upload-modal p{font-size:13px;color:var(--gray);margin-bottom:20px}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border .2s,background .2s}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue);background:rgba(0,87,255,0.05)}
+.drop-zone-icon{font-size:40px;margin-bottom:12px}
+.drop-zone-text{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gray)}
+.drop-zone-sub{font-size:12px;color:rgba(138,155,181,.6);margin-top:4px}
+.upload-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.upload-preview{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.upload-preview img{width:100%;height:100%;object-fit:cover}
+.upload-preview .rm{position:absolute;top:2px;right:2px;background:rgba(244,67,54,.8);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.upload-actions{display:flex;gap:12px;margin-top:20px}
+.btn-cancel{background:var(--dark3);border:1px solid var(--border);border-radius:10px;padding:11px 20px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer}
+.btn-confirm{flex:1;background:var(--grad);border-radius:10px;padding:11px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity .2s}
+.btn-confirm:hover{opacity:.85}.btn-confirm:disabled{opacity:.4;cursor:not-allowed}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:11px 20px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:#E8EEFF;z-index:500;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.tdot{width:8px;height:8px;border-radius:50%}
+.toast.ok .tdot{background:#25D366}.toast.err .tdot{background:#F44336}.toast.info .tdot{background:var(--cyan)}
+
+.empty{padding:60px;text-align:center;color:var(--gray);font-size:14px}
+.pagination{display:flex;justify-content:center;gap:8px;padding:20px;flex-wrap:wrap}
+.page-btn{background:var(--dark3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;color:var(--gray);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.page-btn:hover,.page-btn.active{background:rgba(0,87,255,0.2);border-color:var(--blue);color:#E8EEFF}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">P11 Admin — Fotos</div>
+  <a href="/" class="back-btn">← Volver a la tienda</a>
+</header>
+
+<div class="container">
+  <div class="page-title">Gestión de <span>Fotos</span></div>
+  <p class="page-sub">Subí fotos manualmente o usá la búsqueda automática por Google. Cada producto puede tener múltiples fotos.</p>
+
+  <div class="stats-bar">
+    <div class="stat-box"><div class="stat-num" id="statTotal">—</div><div class="stat-lbl">Total productos</div></div>
+    <div class="stat-box"><div class="stat-num" id="statConFoto">—</div><div class="stat-lbl">Con foto</div></div>
+    <div class="stat-box"><div class="stat-num" id="statSinFoto">—</div><div class="stat-lbl">Sin foto</div></div>
+    <div class="stat-box"><div class="stat-num" id="statFotos">—</div><div class="stat-lbl">Fotos totales</div></div>
+  </div>
+
+  <div class="controls">
+    <input class="search-box" type="text" id="searchBox" placeholder="🔍  Buscar producto...">
+    <select class="filter-sel" id="filterSel">
+      <option value="all">Todos</option>
+      <option value="sin-foto">Sin foto</option>
+      <option value="con-foto">Con foto</option>
+    </select>
+    <button class="btn-auto-all" id="btnAutoAll">⚡ Auto-foto a todos sin imagen</button>
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-text" id="progressText"></span>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span id="tableCount">Cargando productos...</span>
+    </div>
+    <div id="tableBody"><div class="empty">Cargando...</div></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="upload-overlay" id="uploadOverlay">
+  <div class="upload-modal">
+    <h3>📸 Subir Fotos</h3>
+    <p id="uploadProductName">Producto</p>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">📁</div>
+      <div class="drop-zone-text">Arrastrá las fotos acá</div>
+      <div class="drop-zone-sub">o hacé clic para seleccionar · JPG, PNG, WEBP · máx 5MB c/u</div>
+      <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+    </div>
+    <div class="upload-previews" id="uploadPreviews"></div>
+    <div class="upload-actions">
+      <button class="btn-cancel" onclick="closeUpload()">Cancelar</button>
+      <button class="btn-confirm" id="btnConfirmUpload" disabled>Subir fotos</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tdot"></span><span id="toastMsg"></span></div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SB_URL = 'https://dlysfoqsvddltphojyed.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRseXNmb3FzdmRkbHRwaG9qeWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzOTA0NjgsImV4cCI6MjA4Nzk2NjQ2OH0.9OsHDYvXp2BgOZ790yKE-D8e9nvBzkrig7MCFsyT9Pw';
+const db = createClient(SB_URL, SB_ANON);
+const $ = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(n);
+
+const PAGE = 50;
+let allProducts = [], fotosMap = {}, filtered = [], currentPage = 1;
+let uploadProductId = null, uploadFiles = [];
+let autoRunning = false;
+
+// ── Load ────────────────────────────────────────────────
+async function load(){
+  try {
+    const [{ data: prods }, { data: fotos }, { data: cats }] = await Promise.all([
+      db.from('productos').select('id,nombre,precio_venta,stock,activo,foto_url,categoria_id,codigo_interno,codigo_barras,marca_id').eq('activo',true).order('nombre'),
+      db.from('producto_fotos').select('producto_id,foto_url,orden,es_principal').order('orden'),
+      db.from('categorias').select('id,nombre'),
+    ]);
+    const catMap = Object.fromEntries((cats||[]).map(c=>[c.id,c.nombre]));
+    allProducts = (prods||[]).map(p=>({...p, categoria_nombre: catMap[p.categoria_id]||'General'}));
+    // Build fotos map
+    fotosMap = {};
+    for(const f of (fotos||[])){
+      if(!fotosMap[f.producto_id]) fotosMap[f.producto_id]=[];
+      fotosMap[f.producto_id].push(f);
+    }
+    updateStats();
+    applyFilters();
+  } catch(e){ console.error(e); toast('Error cargando datos','err'); }
+}
+
+function updateStats(){
+  const conFoto = allProducts.filter(p=>p.foto_url||(fotosMap[p.id]?.length>0)).length;
+  $('statTotal').textContent = allProducts.length;
+  $('statConFoto').textContent = conFoto;
+  $('statSinFoto').textContent = allProducts.length - conFoto;
+  $('statFotos').textContent = Object.values(fotosMap).reduce((s,a)=>s+a.length,0);
+}
+
+// ── Filters ─────────────────────────────────────────────
+function applyFilters(){
+  const search = $('searchBox').value.trim().toLowerCase();
+  const filter = $('filterSel').value;
+  filtered = allProducts.filter(p=>{
+    const hasFoto = p.foto_url||(fotosMap[p.id]?.length>0);
+    if(filter==='con-foto' && !hasFoto) return false;
+    if(filter==='sin-foto' && hasFoto) return false;
+    if(search && !(p.nombre||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  currentPage=1;
+  renderTable();
+}
+
+// ── Render table ─────────────────────────────────────────
+function renderTable(){
+  const total = filtered.length;
+  const pages = Math.ceil(total/PAGE);
+  const slice = filtered.slice((currentPage-1)*PAGE, currentPage*PAGE);
+  $('tableCount').textContent = `${total} productos`;
+
+  if(!slice.length){ $('tableBody').innerHTML='<div class="empty">Sin resultados</div>'; $('pagination').innerHTML=''; return; }
+
+  $('tableBody').innerHTML=`<table>
+    <thead><tr>
+      <th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Fotos</th><th>Estado</th><th>Acciones</th>
+    </tr></thead>
+    <tbody>${slice.map(p=>{
+      const extras = fotosMap[p.id]||[];
+      const mainImg = extras.find(f=>f.es_principal)?.foto_url || extras[0]?.foto_url || p.foto_url;
+      const totalFotos = extras.length + (p.foto_url&&!extras.find(f=>f.foto_url===p.foto_url)?1:0);
+      const hasFoto = !!mainImg;
+      return `<tr id="row-${p.id}">
+        <td>${mainImg?`<img class="thumb" src="${mainImg}" alt="${p.nombre}" loading="lazy">`:'<div class="no-img">📦</div>'}</td>
+        <td><div class="product-name-cell" title="${p.nombre}">${p.nombre}</div></td>
+        <td><span class="cat-badge">${p.categoria_nombre}</span></td>
+        <td style="font-size:13px;color:var(--gray)">${fmt(p.precio_venta||0)}</td>
+        <td><span class="foto-count ${hasFoto?'has-foto':'no-foto'}">${totalFotos||'—'}</span></td>
+        <td><span class="status ${hasFoto?'ok':'idle'}" id="status-${p.id}">${hasFoto?'✅ Con foto':'— Sin foto'}</span></td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-upload" onclick="openUpload(${p.id},'${escHtml(p.nombre)}')">📁 Subir</button>
+          <button class="btn-auto" id="auto-${p.id}" onclick="autoFoto(${p.id})">🔍 Auto</button>
+          ${hasFoto?`<button class="btn-delete" onclick="deleteFotos(${p.id})">🗑</button>`:''}
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+
+  // Pagination
+  let pg='';
+  if(pages>1){
+    pg+=`<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>← Ant</button>`;
+    for(let i=Math.max(1,currentPage-2);i<=Math.min(pages,currentPage+2);i++)
+      pg+=`<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    pg+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>Sig →</button>`;
+  }
+  $('pagination').innerHTML=pg;
+}
+
+function escHtml(s){ return (s||'').replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+window.goPage = p => { currentPage=p; renderTable(); window.scrollTo(0,0); };
+
+// ── Auto single ──────────────────────────────────────────
+window.autoFoto = async function(id){
+  const p = allProducts.find(x=>x.id===id); if(!p) return;
+  const btn=$(`auto-${id}`), st=$(`status-${id}`);
+  btn.disabled=true; btn.textContent='⏳ Buscando...';
+  if(st) st.className='status searching'; if(st) st.textContent='🔍 Buscando...';
+  try {
+    const res = await fetch('/api/auto-fotos',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({producto_id:p.id, nombre:p.nombre, codigo_interno:p.codigo_interno, codigo_barras:p.codigo_barras}),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error||'Error');
+    // Update local state
+    p.foto_url = data.foto_url;
+    if(!fotosMap[id]) fotosMap[id]=[];
+    fotosMap[id].push({producto_id:id,foto_url:data.foto_url,orden:0,es_principal:true});
+    updateStats();
+    toast(`✅ Foto encontrada para ${p.nombre}`,'ok');
+    applyFilters(); // re-render
+  } catch(e){
+    toast(`❌ ${e.message}`,'err');
+    if(btn){ btn.disabled=false; btn.textContent='🔍 Auto'; }
+    if(st){ st.className='status error'; st.textContent='❌ Error'; }
+  }
+};
+
+// ── Auto all ─────────────────────────────────────────────
+$('btnAutoAll').addEventListener('click', async () => {
+  if(autoRunning) return;
+  const sinFoto = allProducts.filter(p=>!p.foto_url&&!(fotosMap[p.id]?.length>0));
+  if(!sinFoto.length){ toast('Todos los productos ya tienen foto','info'); return; }
+  if(!confirm(`¿Buscar fotos automáticamente para ${sinFoto.length} productos sin imagen?\n\nEsto consume cuota de Google (100 búsquedas/día gratis).`)) return;
+
+  autoRunning=true;
+  $('btnAutoAll').disabled=true;
+  $('progressBar').style.display='block';
+  let done=0, errors=0;
+
+  for(const p of sinFoto){
+    $('progressText').textContent=`${done+1}/${sinFoto.length} — ${p.nombre.substring(0,30)}...`;
+    $('progressFill').style.width=`${Math.round((done/sinFoto.length)*100)}%`;
+    try {
+      const res = await fetch('/api/auto-fotos',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({producto_id:p.id,nombre:p.nombre,codigo_interno:p.codigo_interno,codigo_barras:p.codigo_barras}),
+      });
+      const data=await res.json();
+      if(res.ok){ p.foto_url=data.foto_url; if(!fotosMap[p.id])fotosMap[p.id]=[]; fotosMap[p.id].push({producto_id:p.id,foto_url:data.foto_url,orden:0,es_principal:true}); }
+      else errors++;
+    } catch{ errors++; }
+    done++;
+    await new Promise(r=>setTimeout(r,400)); // evitar rate limit
+  }
+
+  autoRunning=false;
+  $('btnAutoAll').disabled=false;
+  $('progressFill').style.width='100%';
+  $('progressText').textContent=`✅ ${done-errors} ok · ❌ ${errors} errores`;
+  updateStats(); applyFilters();
+  toast(`Auto-foto completado: ${done-errors} éxitos, ${errors} errores`,'ok');
+  setTimeout(()=>{ $('progressBar').style.display='none'; $('progressText').textContent=''; },5000);
+});
+
+// ── Manual upload ────────────────────────────────────────
+window.openUpload = function(id, nombre){
+  uploadProductId=id; uploadFiles=[];
+  $('uploadProductName').textContent=nombre;
+  $('uploadPreviews').innerHTML='';
+  $('btnConfirmUpload').disabled=true;
+  $('uploadOverlay').classList.add('active');
+};
+
+window.closeUpload = () => { $('uploadOverlay').classList.remove('active'); uploadProductId=null; uploadFiles=[]; };
+
+$('dropZone').addEventListener('click', ()=>$('fileInput').click());
+$('dropZone').addEventListener('dragover', e=>{e.preventDefault();$('dropZone').classList.add('dragover');});
+$('dropZone').addEventListener('dragleave', ()=>$('dropZone').classList.remove('dragover'));
+$('dropZone').addEventListener('drop', e=>{e.preventDefault();$('dropZone').classList.remove('dragover');handleFiles([...e.dataTransfer.files]);});
+$('fileInput').addEventListener('change', e=>handleFiles([...e.target.files]));
+
+function handleFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/')) continue;
+    if(f.size>5*1024*1024){ toast(`${f.name} supera 5MB`,'err'); continue; }
+    uploadFiles.push(f);
+  }
+  renderPreviews();
+}
+
+function renderPreviews(){
+  $('uploadPreviews').innerHTML = uploadFiles.map((f,i)=>`
+    <div class="upload-preview">
+      <img src="${URL.createObjectURL(f)}" alt="${f.name}">
+      <button class="rm" onclick="rmFile(${i})">✕</button>
+    </div>`).join('');
+  $('btnConfirmUpload').disabled = uploadFiles.length===0;
+}
+
+window.rmFile = i => { uploadFiles.splice(i,1); renderPreviews(); };
+
+$('btnConfirmUpload').addEventListener('click', async () => {
+  if(!uploadFiles.length||!uploadProductId) return;
+  const btn=$('btnConfirmUpload'); btn.disabled=true; btn.textContent='Subiendo...';
+  let ok=0;
+  for(let i=0;i<uploadFiles.length;i++){
+    const f=uploadFiles[i];
+    const ext=f.name.split('.').pop()||'jpg';
+    const path=`manual/${uploadProductId}-${Date.now()}-${i}.${ext}`;
+    try {
+      const { error: upErr } = await db.storage.from('productos-fotos').upload(path,f,{upsert:true,contentType:f.type});
+      if(upErr) throw upErr;
+      const { data: pub } = db.storage.from('productos-fotos').getPublicUrl(path);
+      const url=pub.publicUrl;
+      await db.from('producto_fotos').insert({producto_id:uploadProductId,foto_url:url,orden:i,es_principal:i===0&&!allProducts.find(p=>p.id===uploadProductId)?.foto_url});
+      // Update main foto_url if first and no existing
+      const prod=allProducts.find(p=>p.id===uploadProductId);
+      if(i===0&&prod&&!prod.foto_url){
+        await db.from('productos').update({foto_url:url}).eq('id',uploadProductId);
+        prod.foto_url=url;
+      }
+      if(!fotosMap[uploadProductId])fotosMap[uploadProductId]=[];
+      fotosMap[uploadProductId].push({producto_id:uploadProductId,foto_url:url,orden:i,es_principal:i===0});
+      ok++;
+    } catch(e){ toast(`Error en ${f.name}: ${e.message}`,'err'); }
+  }
+  updateStats(); applyFilters();
+  closeUpload();
+  toast(`✅ ${ok} foto(s) subida(s)`,'ok');
+  btn.textContent='Subir fotos'; btn.disabled=false;
+});
+
+// ── Delete fotos ─────────────────────────────────────────
+window.deleteFotos = async function(id){
+  if(!confirm('¿Eliminar todas las fotos de este producto?')) return;
+  try {
+    await db.from('producto_fotos').delete().eq('producto_id',id);
+    await db.from('productos').update({foto_url:null}).eq('id',id);
+    delete fotosMap[id];
+    const p=allProducts.find(x=>x.id===id); if(p) p.foto_url=null;
+    updateStats(); applyFilters();
+    toast('Fotos eliminadas','ok');
+  } catch(e){ toast(`Error: ${e.message}`,'err'); }
+};
+
+// ── Toast ────────────────────────────────────────────────
+function toast(msg,type='info'){
+  const t=$('toast'); $('toastMsg').textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>t.className='toast',3500);
+}
+
+$('searchBox').addEventListener('input', applyFilters);
+$('filterSel').addEventListener('change', applyFilters);
+
+load();
+</script>
+</body>
+</html>
