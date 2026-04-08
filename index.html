@@ -133,6 +133,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(5,10,24,0.92);backdrop-fil
 .detail-add-btn{width:100%;background:var(--grad);border-radius:10px;padding:13px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;transition:opacity .2s;margin-top:4px}
 .detail-add-btn:hover:not(:disabled){opacity:.85}
 .detail-add-btn:disabled{opacity:.35;cursor:not-allowed;background:var(--dark3)}
+.detail-qty-row{display:flex;align-items:center;gap:10px;margin:4px 0}
+.detail-qty-row .qty-btn{width:34px;height:34px;font-size:20px;border-radius:8px}
+.detail-qty-row .qty-num{font-family:'Bebas Neue',sans-serif;font-size:24px;min-width:32px;text-align:center;color:var(--white)}
 
 /* CART */
 .overlay{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s}
@@ -421,11 +424,13 @@ async function load(){
     ]);
     if(error) throw error;
     const catMap = Object.fromEntries((cats||[]).map(c=>[c.id,c.nombre]));
-    allProducts = (prods||[]).map(p=>({
-      ...p,
-      categoria_original: catMap[p.categoria_id]||'General',
-      categoria_nombre: catMadre(catMap[p.categoria_id]||'General'),
-    }));
+    allProducts = (prods||[])
+      .filter(p => (p.stock||0) > 0)
+      .map(p=>({
+        ...p,
+        categoria_original: catMap[p.categoria_id]||'General',
+        categoria_nombre: catMadre(catMap[p.categoria_id]||'General'),
+      }));
     if($('heroCount')) $('heroCount').textContent = allProducts.length;
     buildFilters();
     renderOffers();
@@ -508,7 +513,7 @@ function card(p, badge=false){
   const img=p.foto_url?`<img src="${p.foto_url}" alt="${p.nombre}" loading="lazy" onerror="this.parentNode.innerHTML='<span class=product-emoji>${catEmoji(p.categoria_nombre)}</span>'">`:`<span class="product-emoji">${catEmoji(p.categoria_nombre)}</span>`;
   return `<div class="product-card" onclick="openDetail(${p.id})">
     ${badge?'<span class="offer-badge">⚡ Destacado</span>':''}
-    ${st===0?'<span class="out-badge">Sin stock</span>':''}
+
     <div class="product-img-wrap">${img}</div>
     <div class="product-info">
       <div class="product-cat">${p.categoria_nombre}</div>
@@ -522,22 +527,30 @@ function card(p, badge=false){
 }
 
 // ── Product Detail ─────────────────────────────────────────────
-window.openDetail = function(id){
+window.openDetail = async function(id){
   const p = allProducts.find(x=>x.id===id); if(!p) return;
   const st=p.stock||0;
-  const imgs = p.foto_url ? [p.foto_url] : [];
+
+  // Cargar fotos adicionales desde producto_fotos
+  let imgs = p.foto_url ? [p.foto_url] : [];
+  try {
+    const { data: fotos } = await db.from('producto_fotos')
+      .select('foto_url,orden')
+      .eq('producto_id', id)
+      .order('orden');
+    if(fotos && fotos.length > 0){
+      const extraUrls = fotos.map(f=>f.foto_url).filter(u=>u&&u!==p.foto_url);
+      imgs = [...imgs, ...extraUrls];
+    }
+  } catch(e){ /* tabla puede no existir aún */ }
+
   const mainImg = imgs.length
     ? `<img class="detail-main-img" id="detailMainImg" src="${imgs[0]}" alt="${p.nombre}">`
     : `<span class="detail-emoji">${catEmoji(p.categoria_nombre)}</span>`;
   const thumbs = imgs.length>1
     ? `<div class="detail-thumbs">${imgs.map((u,i)=>`<div class="detail-thumb ${i===0?'active':''}" onclick="switchImg('${u}',this)"><img src="${u}" alt="foto ${i+1}"></div>`).join('')}</div>`
     : '';
-  const desc = p.descripcion||'<em style="color:var(--gray)">Sin descripción cargada aún.</em>';
-  const meta = [
-    p.codigo_interno ? `<div class="detail-meta-row"><span class="detail-meta-key">Código:</span><span class="detail-meta-val">${p.codigo_interno}</span></div>` : '',
-    p.codigo_barras  ? `<div class="detail-meta-row"><span class="detail-meta-key">Código barras:</span><span class="detail-meta-val">${p.codigo_barras}</span></div>` : '',
-    p.categoria_original ? `<div class="detail-meta-row"><span class="detail-meta-key">Categoría:</span><span class="detail-meta-val">${p.categoria_original}</span></div>` : '',
-  ].filter(Boolean).join('');
+  const desc = p.descripcion||'';
   $('detailModal').innerHTML=`
     <div class="detail-gallery">
       ${mainImg}
@@ -548,12 +561,19 @@ window.openDetail = function(id){
       <div class="detail-cat">${p.categoria_nombre}</div>
       <div class="detail-name">${p.nombre}</div>
       <div class="detail-price">${fmt(p.precio_venta||0)}</div>
-      <div class="detail-desc">${desc}</div>
-      ${meta?`<div class="detail-meta">${meta}</div>`:''}
-      <button class="detail-add-btn" onclick="addToCart(${p.id});closeDetail()" ${st===0?'disabled':''}>
-        ${st===0?'Sin stock disponible':'🛒 Agregar al carrito'}
+      ${desc ? `<div class="detail-desc">${desc}</div>` : ''}
+      <div class="detail-qty-row">
+        <button class="qty-btn" onclick="detailQty(-1)">−</button>
+        <span class="qty-num" id="detailQtyVal">1</span>
+        <button class="qty-btn" onclick="detailQty(1)">+</button>
+        <span style="font-size:13px;color:var(--gray);margin-left:8px">disponibles: ${st}</span>
+      </div>
+      <button class="detail-add-btn" onclick="addToCartQty(${p.id})">
+        🛒 Agregar al carrito
       </button>
     </div>`;
+  window._detailStock = st;
+  window._detailQty = 1;
   $('detailOverlay').classList.add('active');
   document.body.style.overflow='hidden';
 };
@@ -569,6 +589,29 @@ window.closeDetail = function(){
   document.body.style.overflow='';
 };
 $('detailOverlay').addEventListener('click',e=>{ if(e.target===$('detailOverlay')) closeDetail(); });
+
+window.detailQty = function(d){
+  const newVal = (window._detailQty||1) + d;
+  if(newVal < 1 || newVal > (window._detailStock||99)) return;
+  window._detailQty = newVal;
+  const el = $('detailQtyVal'); if(el) el.textContent = newVal;
+};
+
+window.addToCartQty = function(id){
+  const qty = window._detailQty||1;
+  const p = allProducts.find(x=>x.id===id); if(!p) return;
+  const ex = cart.find(x=>x.id===id);
+  if(ex){
+    const newQty = ex.qty + qty;
+    if(newQty > (p.stock||0)){ toast('No hay suficiente stock','err'); return; }
+    ex.qty = newQty;
+  } else {
+    cart.push({id:p.id,name:p.nombre,price:p.precio_venta||0,img:p.foto_url,cat:p.categoria_nombre,qty,stock:p.stock||0});
+  }
+  saveCart(); updateCartUI();
+  toast(`✔ ${qty}x ${p.nombre} agregado`,'ok');
+  closeDetail();
+};
 
 // ── Cart ───────────────────────────────────────────────────────
 window.addToCart = function(id){
