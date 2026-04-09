@@ -281,7 +281,7 @@ window.autoFoto = async function(id){
   btn.disabled=true; btn.textContent='⏳ Buscando...';
   if(st) st.className='status searching'; if(st) st.textContent='🔍 Buscando...';
   try {
-    const res = await fetch('/api/auto-fotos',{
+    const res = await fetch('/api/buscar-foto',{
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({producto_id:p.id, nombre:p.nombre, codigo_interno:p.codigo_interno, codigo_barras:p.codigo_barras}),
     });
@@ -317,7 +317,7 @@ $('btnAutoAll').addEventListener('click', async () => {
     $('progressText').textContent=`${done+1}/${sinFoto.length} — ${p.nombre.substring(0,30)}...`;
     $('progressFill').style.width=`${Math.round((done/sinFoto.length)*100)}%`;
     try {
-      const res = await fetch('/api/auto-fotos',{
+      const res = await fetch('/api/buscar-foto',{
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({producto_id:p.id,nombre:p.nombre,codigo_interno:p.codigo_interno,codigo_barras:p.codigo_barras}),
       });
