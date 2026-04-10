@@ -132,6 +132,8 @@ tr:hover td{background:rgba(0,87,255,0.04)}
       <option value="all">Todos</option>
       <option value="sin-foto">Sin foto</option>
       <option value="con-foto">Con foto</option>
+      <option value="stock-sin-foto">Con stock y sin foto</option>
+      <option value="stock-con-foto">Con stock y con foto</option>
     </select>
     <button class="btn-auto-all" id="btnAutoAll">⚡ Auto-foto a todos sin imagen</button>
     <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
@@ -217,8 +219,11 @@ function applyFilters(){
   const filter = $('filterSel').value;
   filtered = allProducts.filter(p=>{
     const hasFoto = p.foto_url||(fotosMap[p.id]?.length>0);
+    const tieneStock = (p.stock||0) > 0;
     if(filter==='con-foto' && !hasFoto) return false;
     if(filter==='sin-foto' && hasFoto) return false;
+    if(filter==='stock-sin-foto' && (hasFoto || !tieneStock)) return false;
+    if(filter==='stock-con-foto' && (!hasFoto || !tieneStock)) return false;
     if(search && !(p.nombre||'').toLowerCase().includes(search)) return false;
     return true;
   });
