@@ -7,7 +7,52 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--blue:#0057FF;--cyan:#00C8FF;--dark:#050A18;--dark2:#0C1525;--dark3:#111B30;--gray:#8A9BB5;--white:#FFFFFF;--grad:linear-gradient(135deg,#0057FF 0%,#00C8FF 100%);--border:rgba(0,87,255,0.18);--card-bg:rgba(12,21,37,0.9)}
+:root{--blue:#0057FF;--cyan:#00C8FF;--dark:#050A18;--dark2:#0C1525;--dark3:#111B30;--gray:#8A9BB5;--white:#FFFFFF;--grad:linear-gradient(135deg,#0057FF 0%,#00C8FF 100%);--border:rgba(0,87,255,0.18);--card-bg:rgba(12,21,37,0.9);--text-primary:#E8EEFF;--text-secondary:#8A9BB5;--bg-body:#050A18}
+body.light-mode{--dark:#F0F5FF;--dark2:#FFFFFF;--dark3:#E0E8FF;--gray:#5A6A85;--white:#050A18;--border:rgba(0,87,255,0.15);--card-bg:rgba(255,255,255,0.95);--text-primary:#0C1525;--text-secondary:#5A6A85;--bg-body:#F0F5FF}
+body.light-mode{background:#F0F5FF;color:#0C1525}
+body.light-mode .bg-grid{background-image:linear-gradient(rgba(0,87,255,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,87,255,0.06) 1px,transparent 1px)}
+body.light-mode .bg-glow1{background:radial-gradient(circle,rgba(0,87,255,0.08) 0%,transparent 70%)}
+body.light-mode .bg-glow2{background:radial-gradient(circle,rgba(0,200,255,0.06) 0%,transparent 70%)}
+body.light-mode nav{background:rgba(240,245,255,0.95);border-bottom:1px solid rgba(0,87,255,0.15)}
+body.light-mode .nav-search{background:#fff;color:#0C1525}
+body.light-mode .nav-search::placeholder{color:#8A9BB5}
+body.light-mode .cart-btn{background:rgba(0,87,255,0.08);color:#0C1525}
+body.light-mode .product-card{background:#fff;border-color:rgba(0,87,255,0.12)}
+body.light-mode .product-img-wrap{background:#F0F5FF}
+body.light-mode .product-name{color:#0C1525}
+body.light-mode .product-cat{color:var(--blue)}
+body.light-mode .filter-chip{background:#fff;color:#5A6A85;border-color:rgba(0,87,255,0.2)}
+body.light-mode .filter-chip.active,.body.light-mode .filter-chip:hover{background:rgba(0,87,255,0.1);color:var(--blue)}
+body.light-mode .sort-btn{background:#fff;color:#5A6A85}
+body.light-mode .sort-btn.active{background:rgba(0,200,255,0.1);color:var(--blue)}
+body.light-mode .extra-filter{background:#fff;color:#5A6A85}
+body.light-mode .price-input{background:#fff;color:#0C1525}
+body.light-mode .add-btn{background:rgba(0,87,255,0.08);color:#0C1525}
+body.light-mode .hero-title{color:#0C1525}
+body.light-mode .hero-sub{color:#5A6A85}
+body.light-mode .hero-stat .lbl{color:#5A6A85}
+body.light-mode .sec-title{color:#0C1525}
+body.light-mode .sec-desc{color:#5A6A85}
+body.light-mode .contact-item{background:#fff}
+body.light-mode .contact-item-val{color:#0C1525}
+body.light-mode .cart-drawer{background:#fff}
+body.light-mode .cart-item{background:rgba(0,87,255,0.04)}
+body.light-mode .cart-item-name{color:#0C1525}
+body.light-mode .modal{background:#fff}
+body.light-mode .modal-header{background:#fff}
+body.light-mode .form-input,.body.light-mode .form-select{background:#F0F5FF;color:#0C1525}
+body.light-mode .order-sum{background:#F0F5FF}
+body.light-mode .pay-opt{background:#F0F5FF}
+body.light-mode .detail-modal{background:#fff}
+body.light-mode .detail-gallery{background:#F0F5FF;border-radius:20px 0 0 20px}
+body.light-mode .detail-info{background:#fff}
+body.light-mode .detail-name{color:#0C1525}
+body.light-mode .detail-desc{color:#5A6A85}
+body.light-mode .page-btn{background:#fff;color:#5A6A85}
+body.light-mode footer{background:#fff}
+body.light-mode .footer-sub,.footer-note{color:#5A6A85}
+body.light-mode .skeleton{background:linear-gradient(90deg,#E0E8FF 25%,#F0F5FF 50%,#E0E8FF 75%)}
+body.light-mode .toast{background:#fff;color:#0C1525}
 *{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
 body{background:var(--dark);color:#E8EEFF;font-family:'DM Sans',sans-serif;line-height:1.6;overflow-x:hidden}
 a{text-decoration:none;color:inherit}button{cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
@@ -32,6 +77,9 @@ nav{position:sticky;top:0;z-index:100;background:rgba(5,10,24,0.92);backdrop-fil
 .cart-badge{background:var(--grad);color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;position:absolute;top:-8px;right:-8px}
 .nav-wa{background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.25);border-radius:10px;padding:8px 14px;color:#25D366;font-size:20px;transition:background .2s}
 .nav-wa:hover{background:rgba(37,211,102,0.22)}
+.theme-btn{background:rgba(255,255,255,0.08);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:18px;cursor:pointer;transition:background .2s;line-height:1}
+.theme-btn:hover{background:rgba(255,255,255,0.15)}
+body.light-mode .theme-btn{background:rgba(0,87,255,0.08);border-color:rgba(0,87,255,0.2)}
 @media(max-width:768px){.nav-links{display:none}.nav-search{width:120px}}
 
 /* HERO */
@@ -253,6 +301,7 @@ footer{border-top:1px solid var(--border);background:var(--dark2);padding:48px 2
   </div>
   <div class="nav-right">
     <input class="nav-search" type="text" id="searchInput" placeholder="🔍  Buscar...">
+    <button class="theme-btn" id="themeBtn" title="Cambiar tema">🌙</button>
     <a href="https://wa.me/543512294812" target="_blank" class="nav-wa" title="WhatsApp">💬</a>
     <button class="cart-btn" id="cartBtn">🛒 Carrito<span class="cart-badge" id="cartBadge">0</span></button>
   </div>
@@ -783,6 +832,27 @@ document.querySelectorAll('.sort-btn').forEach(b=>b.addEventListener('click',()=
   b.classList.add('active'); sortBy=b.dataset.sort; currentPage=1; applyAndRender();
 }));
 
+// Theme
+function initTheme(){
+  const saved = localStorage.getItem('p11_theme');
+  if(saved === 'light') applyTheme('light');
+}
+function applyTheme(mode){
+  if(mode === 'light'){
+    document.body.classList.add('light-mode');
+    $('themeBtn').textContent = '☀️';
+    localStorage.setItem('p11_theme','light');
+  } else {
+    document.body.classList.remove('light-mode');
+    $('themeBtn').textContent = '🌙';
+    localStorage.setItem('p11_theme','dark');
+  }
+}
+$('themeBtn').addEventListener('click', () => {
+  const isLight = document.body.classList.contains('light-mode');
+  applyTheme(isLight ? 'dark' : 'light');
+});
+initTheme();
 updateCartUI();
 load();
 </script>
