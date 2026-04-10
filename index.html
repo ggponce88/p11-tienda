@@ -515,7 +515,14 @@ function buildFilters(){
 function getFiltered(){
   let list = [...allProducts];
   if(currentCat!=='all') list=list.filter(p=>p.categoria_nombre===currentCat);
-  if(search) list=list.filter(p=>(p.nombre||'').toLowerCase().includes(search));
+  if(search){
+    const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+    list = list.filter(p => {
+      const name = (p.nombre||'').toLowerCase();
+      // Cada término debe aparecer como substring en alguna parte del nombre
+      return terms.every(term => name.split(/\s+/).some(word => word.includes(term)) || name.includes(term));
+    });
+  }
   if(filterStock===true) list=list.filter(p=>(p.stock||0)>0);
   if(filterStock===false) list=list.filter(p=>(p.stock||0)===0);
   if(priceMin!=null) list=list.filter(p=>(p.precio_venta||0)>=priceMin);
